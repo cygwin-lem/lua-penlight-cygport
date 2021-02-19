@@ -1,0 +1,132 @@
+NAME="lua-pl"
+VERSION=1.9.2
+RELEASE=1
+CATEGORY="Lua"
+SUMMARY="Penlight Lua Libraries"
+DESCRIPTION="\
+Penlight brings together a set of generally useful pure Lua modules,
+focusing on input data handling (such as reading configuration files),
+functional programming (such as map, reduce, placeholder expressions,
+etc), and OS path management. Much of the functionality is inspired by
+the Python standard libraries.
+"
+HOMEPAGE="https://lunarmodules.github.io/Penlight/"
+
+GIT_REPO="https://github.com/lunarmodules/Penlight"
+declare -A GIT_DATEHASH_BY_NAME=(
+  # git log --date=iso-strict --format='%cd/%H' -1
+  [1.9.2p48]=2021-01-31T08:35:25+01:00/43313240d7fe3c5f51ea77072164a9d1690ffd56
+  [1.9.2]=2020-09-27T12:39:11+02:00/1.9.2
+)
+REV_HASH="${GIT_DATEHASH_BY_NAME[${VERSION}]#*/}"
+REV_DATE="${GIT_DATEHASH_BY_NAME[${VERSION}]%%/*}"
+REV_DATE_SHORT="${REV_DATE%%T*}"
+GIT_BASENAME="${GIT_REPO##*/}"
+SRC_URI="${GIT_REPO}/archive/${REV_HASH}/${GIT_BASENAME}-${VERSION}.tar.gz"
+SRC_DIR="${GIT_BASENAME}-${REV_HASH#v}"
+
+ARCH="noarch"
+
+################################
+LUA_VERSIONS="5.3:5.4"
+LUA_PKG_NAME="pl"
+source lua.experiment
+
+################################
+## Patch files
+################################
+# Patch filenames are in a default style of 'git format-patch'
+PATCH_URI=$(\
+  find -maxdepth 1 -type f -name '[0-9][0-9][0-9][0-9]-*.patch' \
+  | sort \
+)
+# Additional patches, if any
+PATCH_URI+="
+"
+
+################################
+## Requirements for building
+################################
+BUILD_REQUIRES="\
+  pkg-config\
+  lua53-devel\
+  lua54-devel\
+"
+# TEST_REQUIRES="\
+# "
+
+################################
+ABI=0
+
+
+################################
+_CYGPORT_RESTRICT_postinst_doc_=1
+
+set_packages_lua() {
+  local LUA_VERSION=$1
+  local LUA_PKG_NAME=$2
+
+  __add_pkg "lua${LUA_CYG_V[${LUA_VERSION}]}-${LUA_PKG_NAME}"
+  __set_pkg_property . CONTENTS "
+    usr/share/doc/lua${LUA_CYG_V[${LUA_VERSION}]}-*
+    usr/*/lua/${LUA_VERSION}/
+  "
+  __set_pkg_property . REQUIRES "\
+    lua${LUA_CYG_V[${LUA_VERSION}]}\
+    lua${LUA_CYG_V[${LUA_VERSION}]}-lfs\
+  "
+  __set_pkg_property . REQUIRES_SUPPRESS "${COMMON_REQUIRES_SUPPRESS}"
+}
+
+set_packages() {
+  local LUA_PKG_NAME=$1
+  local LUA_VERSION
+  COMMON_REQUIRES_SUPPRESS=
+  for LUA_VERSION in ${LUA_VERSIONS//:/ }; do
+    COMMON_REQUIRES_SUPPRESS+=" lua${LUA_CYG_V[${LUA_VERSION}]}-${LUA_PKG_NAME}"
+  done
+
+  for LUA_VERSION in ${LUA_VERSIONS//:/ }; do
+    set_packages_lua ${LUA_VERSION} ${LUA_PKG_NAME}
+  done
+}
+
+set_packages ${LUA_PKG_NAME}
+
+################################
+src_compile_lua() {
+  local LUA_VERSION=$1
+  local LUA_PKG_NAME=$2
+  mkdir -p ${B}/${LUA_VERSION}
+  cd  ${B}/${LUA_VERSION}
+  inform "[Compile] Lua ${LUA_VERSION}: ${LUA_PKG_NAME}"
+
+  lndirs ${S} .
+}
+
+################################
+src_install_lua() {
+  local LUA_VERSION=$1
+  local LUA_PKG_NAME=$2
+  cd ${B}/${LUA_VERSION}
+  inform "[Install] Lua ${LUA_VERSION}: ${LUA_PKG_NAME}"
+
+  __doinsdir lua ${LUA_LMOD_V[${LUA_VERSION}]}
+  __dodocdir docs /lua${LUA_CYG_V[${LUA_VERSION}]}-${LUA_PKG_NAME}/html
+  docinto /lua${LUA_CYG_V[${LUA_VERSION}]}-${LUA_PKG_NAME}
+  dodoc *.md
+}
+
+################################
+src_test_lua() {
+  local LUA_VERSION=$1
+  local LUA_PKG_NAME=$2
+  cd ${B}/${LUA_VERSION}
+  inform "[Test] Lua ${LUA_VERSION}: ${LUA_PKG_NAME}"
+  lua${LUA_VERSION} -v
+
+  lua${LUA_VERSION} run.lua tests
+  lua${LUA_VERSION} run.lua examples
+}
+
+################################
