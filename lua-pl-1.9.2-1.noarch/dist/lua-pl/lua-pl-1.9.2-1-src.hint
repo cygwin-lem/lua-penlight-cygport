@@ -8,5 +8,4 @@ etc), and OS path management. Much of the functionality is inspired by
 the Python standard libraries.
 "
 skip:
-test:
 homepage: https://lunarmodules.github.io/Penlight/

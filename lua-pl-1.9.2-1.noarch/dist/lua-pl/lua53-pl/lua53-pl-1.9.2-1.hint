@@ -8,4 +8,3 @@ etc), and OS path management. Much of the functionality is inspired by
 the Python standard libraries.
 "
 external-source: lua-pl
-test:
