@@ -1,0 +1,107 @@
+NAME="lua-pl"
+VERSION=1.10.0p2
+RELEASE=1
+CATEGORY="Lua"
+SUMMARY="Penlight Lua Libraries"
+DESCRIPTION="\
+Penlight brings together a set of generally useful pure Lua modules,
+focusing on input data handling (such as reading configuration files),
+functional programming (such as map, reduce, placeholder expressions,
+etc), and OS path management. Much of the functionality is inspired by
+the Python standard libraries.
+"
+HOMEPAGE="https://lunarmodules.github.io/Penlight/"
+
+GIT_REPO="https://github.com/lunarmodules/Penlight"
+declare -A GIT_DATEHASH_BY_NAME=(
+  # git log --date=iso-strict --format='%cd/%H' -1
+  [1.10.0p2]=2021-05-18T20:30:46+02:00/19c863ed5a28fc25b6031fef46fc83add51a7169
+  [1.10.0]=2021-04-27T10:12:46+02:00/1.10.0
+)
+REV_HASH="${GIT_DATEHASH_BY_NAME[${VERSION}]#*/}"
+REV_DATE="${GIT_DATEHASH_BY_NAME[${VERSION}]%%/*}"
+REV_DATE_SHORT="${REV_DATE%%T*}"
+GIT_BASENAME="${GIT_REPO##*/}"
+SRC_URI="${GIT_REPO}/archive/${REV_HASH}/${GIT_BASENAME}-${VERSION}.tar.gz"
+SRC_DIR="${GIT_BASENAME}-${REV_HASH#v}"
+
+ARCH="noarch"
+
+################################
+LUA_VERSIONS="5.3:5.4"
+LUA_PKG_NAME="pl"
+source lua.experiment
+
+################################
+## Patch files
+################################
+# Patch filenames are in a default style of 'git format-patch'
+PATCH_URI=$(\
+  find -maxdepth 1 -type f -name '[0-9][0-9][0-9][0-9]-*.patch' \
+  | sort \
+)
+# Additional patches, if any
+PATCH_URI+="
+"
+
+################################
+## Requirements for building
+################################
+BUILD_REQUIRES="\
+  lua53-devel\
+  lua53-lfs\
+\
+  lua54-devel\
+  lua54-lfs\
+"
+# TEST_REQUIRES="\
+# "
+
+################################
+ABI=0
+
+
+################################
+_CYGPORT_RESTRICT_postinst_doc_=1
+
+set_packages_lua() {
+  __add_pkg "lua${LUA_VERSION_CYG}-${LUA_PKG_NAME}"
+  __set_pkg_property . CONTENTS "
+    usr/share/doc/lua${LUA_VERSION_CYG}-${LUA_PKG_NAME}/
+    usr/*/lua/${LUA_VERSION}/
+  "
+  __set_pkg_property . REQUIRES "lua${LUA_VERSION_CYG}"
+
+  __append_pkg_property . REQUIRES "\
+    lua${LUA_VERSION_CYG}-lfs\
+  "
+}
+
+set_packages_lua_versions ${LUA_VERSIONS} ${LUA_PKG_NAME}
+
+################################
+src_compile_lua() {
+  mkdir -p ${B}/${LUA_VERSION}
+  cd  ${B}/${LUA_VERSION}
+
+  lndirs ${S} .
+}
+
+################################
+src_install_lua() {
+  cd ${B}/${LUA_VERSION}
+
+  __doinsdir lua ${LUA_SCRIPTDIR}
+
+  dodoc *.md *.rockspec docs/
+}
+
+################################
+src_test_lua() {
+  cd ${B}/${LUA_VERSION}
+
+  lua${LUA_VERSION} run.lua tests
+  lua${LUA_VERSION} run.lua examples
+}
+
+################################
