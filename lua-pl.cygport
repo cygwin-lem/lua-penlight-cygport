@@ -28,7 +28,7 @@ SRC_DIR="${GIT_BASENAME}-${REV_HASH#v}"
 ARCH="noarch"
 
 ################################
-LUA_VERSIONS="5.3:5.4"
+LUA_VERSIONS="5.1:5.2:5.3:5.4"
 LUA_PKG_NAME="pl"
 source lua.experiment
 
@@ -48,11 +48,10 @@ PATCH_URI+="
 ## Requirements for building
 ################################
 BUILD_REQUIRES="\
-  lua53-devel\
-  lua53-lfs\
-\
-  lua54-devel\
-  lua54-lfs\
+  lua51-devel lua51-lfs\
+  lua52-devel lua52-lfs\
+  lua53-devel lua53-lfs\
+  lua54-devel lua54-lfs\
 "
 # TEST_REQUIRES="\
 # "
