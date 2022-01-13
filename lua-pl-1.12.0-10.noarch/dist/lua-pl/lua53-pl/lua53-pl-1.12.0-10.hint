@@ -1,5 +1,5 @@
 category: Lua
-requires: lua54-pl lua53    lua53-lfs  
+requires: lua53 lua53-lfs
 sdesc: "Penlight Lua Libraries"
 ldesc: "Penlight brings together a set of generally useful pure Lua modules,
 focusing on input data handling (such as reading configuration files),
